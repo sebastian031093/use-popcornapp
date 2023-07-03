@@ -1,0 +1,3 @@
+export function useLocalStorage() {
+  //Here you put your code....
+}

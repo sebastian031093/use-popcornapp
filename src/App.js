@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import StartRaiting from './StartRaiting';
+import { useMovies } from './useMovies';
 
 //http://www.omdbapi.com/?i=tt3896198&apikey=95e6e2e9
 //https://www.omdbapi.com/?s=Guardians+of+the+Galaxy&apikey=95e6e2e9
@@ -9,13 +10,12 @@ const average = arr =>
 const KEY = '95e6e2e9';
 
 export default function App() {
-  const [movies, setMovies] = useState([]);
   // const [watched, setWatched] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [query, setQuery] = useState('cars');
-  const [error, setError] = useState('');
 
+  const [query, setQuery] = useState('');
   const [selctedId, setSelectedId] = useState('');
+
+  const { movies, isLoading, error } = useMovies(query, handleCloseMovie);
 
   const [watched, setWatched] = useState(() => {
     const storedValue = localStorage.getItem('watched');
@@ -50,54 +50,6 @@ export default function App() {
     },
     [watched]
   );
-
-  useEffect(() => {
-    // fetch(`https://www.omdbapi.com/?s=Guardians+of+the+Galaxy&apikey=${KEY}`)
-    //   .then(resp => resp.json())
-    //   .then(data => /* console.log(data) */ setMovies(data.Search));
-    const controller = new AbortController();
-    const fetchMovies = async () => {
-      try {
-        setIsLoading(true);
-        setError('');
-        const resp = await fetch(
-          `https://www.omdbapi.com/?s=${query}&apikey=${KEY}`,
-          { signal: controller.signal }
-        );
-
-        if (!resp.ok)
-          throw new Error('Something went wrogn whit fetching movies.');
-
-        const data = await resp.json();
-
-        if (data.Response === 'False') throw new Error(data.Error);
-        // console.log(data.Search);
-        setMovies(data.Search);
-        setError('');
-      } catch (error) {
-        console.log(error.message);
-
-        if (error.name !== 'AbortError') {
-          setError(error.message);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (query.length < 3) {
-      setMovies([]);
-      setError('');
-      return;
-    }
-    fetchMovies();
-
-    return function () {
-      controller.abort();
-    };
-
-    // return () => console.log('Cleanup...');
-  }, [query]);
 
   return (
     <>
@@ -179,6 +131,34 @@ function Logo() {
 }
 
 function Search({ query, setQuery }) {
+  //this is no declarative...
+  // useEffect(function () {
+  //   const el = document.querySelector('.search');
+  //   console.log(el);
+  //   el.focus();
+  // }, []);
+
+  const focusBox = useRef(null);
+  //this has been executed affter all app was redered
+  useEffect(
+    function () {
+      function callback(event) {
+        if (document.activeElement === focusBox.current) return;
+
+        if (event.code === 'Enter') {
+          focusBox.current.focus();
+          setQuery('');
+        }
+      }
+
+      document.addEventListener('keydown', callback);
+
+      return document.addEventListener('keydown', callback);
+    },
+    [setQuery]
+  );
+  // focusBox.focus();
+
   return (
     <input
       className="search"
@@ -186,6 +166,7 @@ function Search({ query, setQuery }) {
       placeholder="Search movies..."
       value={query}
       onChange={e => setQuery(e.target.value)}
+      ref={focusBox}
     />
   );
 }
@@ -256,6 +237,12 @@ function MovieDetails({ selctedId, onCloseMovie, onAddwatched, watched }) {
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState();
 
+  const countRef = useRef(0);
+
+  useEffect(() => {
+    if (userRating) countRef.current = countRef.current + 1;
+  }, [userRating]);
+
   const isWathced = watched.map(movie => movie.imdbID).includes(selctedId);
   const watchedUserRating = watched.find(
     movie => movie.imdbID === selctedId
@@ -284,6 +271,7 @@ function MovieDetails({ selctedId, onCloseMovie, onAddwatched, watched }) {
       imdbRating: +imdbRating,
       runtime: runtime.split(' ').at(0),
       userRating: userRating,
+      numOfClicksRting: countRef.current,
     };
 
     onAddwatched(newWatchedMovie);
