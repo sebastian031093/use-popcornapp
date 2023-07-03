@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import StartRaiting from './StartRaiting';
 import { useMovies } from './useMovies';
+import { useLocalStorage } from './useLocalStorage';
+import { useKeyScape } from './useKeyScape';
 
 //http://www.omdbapi.com/?i=tt3896198&apikey=95e6e2e9
 //https://www.omdbapi.com/?s=Guardians+of+the+Galaxy&apikey=95e6e2e9
@@ -16,11 +18,7 @@ export default function App() {
   const [selctedId, setSelectedId] = useState('');
 
   const { movies, isLoading, error } = useMovies(query, handleCloseMovie);
-
-  const [watched, setWatched] = useState(() => {
-    const storedValue = localStorage.getItem('watched');
-    return JSON.parse(storedValue);
-  });
+  const [watched, setWatched] = useLocalStorage([], 'watched');
 
   // const tempQuery = 'Guardians+of+the+Galaxy';
 
@@ -43,13 +41,6 @@ export default function App() {
     // console.log(id);
     setWatched(watched => watched.filter(movie => movie.imdbID !== id));
   }
-
-  useEffect(
-    function () {
-      localStorage.setItem('watched', JSON.stringify(watched));
-    },
-    [watched]
-  );
 
   return (
     <>
@@ -236,6 +227,8 @@ function MovieDetails({ selctedId, onCloseMovie, onAddwatched, watched }) {
   const [movie, setMovie] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [userRating, setUserRating] = useState();
+  //what works?
+  useKeyScape('Escape', onCloseMovie);
 
   const countRef = useRef(0);
 
@@ -277,27 +270,6 @@ function MovieDetails({ selctedId, onCloseMovie, onAddwatched, watched }) {
     onAddwatched(newWatchedMovie);
     onCloseMovie();
   }
-
-  useEffect(
-    function () {
-      document.addEventListener('keydown', function (event) {
-        if (event.code === 'Escape') {
-          onCloseMovie();
-          console.log('closing');
-        }
-      });
-
-      return function () {
-        document.removeEventListener('keydown', function (event) {
-          if (event.code === 'Escape') {
-            onCloseMovie();
-            console.log('closing');
-          }
-        });
-      };
-    },
-    [onCloseMovie]
-  );
 
   useEffect(() => {
     async function getMovie() {
