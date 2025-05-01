@@ -55,7 +55,7 @@ export function useMovies(query, callback) {
     };
 
     // return () => console.log('Cleanup...');
-  }, [query]);
+  }, [query, callback]);
 
   return { movies, isLoading, error };
 }

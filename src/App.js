@@ -6,6 +6,7 @@ import { useKeyScape } from './useKeyScape';
 
 //http://www.omdbapi.com/?i=tt3896198&apikey=95e6e2e9
 //https://www.omdbapi.com/?s=Guardians+of+the+Galaxy&apikey=95e6e2e9
+//TODO: done
 const average = arr =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
