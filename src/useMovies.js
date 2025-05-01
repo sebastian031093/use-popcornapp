@@ -9,7 +9,7 @@ export function useMovies(query, callback) {
     // fetch(`https://www.omdbapi.com/?s=Guardians+of+the+Galaxy&apikey=${KEY}`)
     //   .then(resp => resp.json())
     //   .then(data => /* console.log(data) */ setMovies(data.Search));
-    callback?.();
+    // callback?.();
     const controller = new AbortController();
     const fetchMovies = async () => {
       try {
@@ -55,7 +55,7 @@ export function useMovies(query, callback) {
     };
 
     // return () => console.log('Cleanup...');
-  }, [query, callback]);
+  }, [query]);
 
   return { movies, isLoading, error };
 }
